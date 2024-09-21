@@ -31,3 +31,14 @@ def airport_list(airport_amount): #taking airport information and putting it in 
     for i in range(airport_amount):
         airport_dict[i+1] = get_airport_information()
     return airport_dict
+def choose_difficulty(): #taking difficulty and turn it into number
+    print("Higher difficulty will give you less money to work with, but give more points at the end.")
+    print("What difficulty would you like to choose? ")
+    print("1: Easy")
+    print("2: Medium")
+    print("3: Hard")
+    difficulty = input()
+    return difficulty
+def points_calculation(co2_used,fuel_consumed,money_left_over,difficulty): #points calculation
+    points = int(10000/(((co2_used*0.25 + fuel_consumed*0.25 + money_left_over)*(1+difficulty/5))/2000))
+    return points
