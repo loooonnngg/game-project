@@ -1,1 +1,1 @@
-# game-project
+specification document go hear when finished
