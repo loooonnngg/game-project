@@ -213,5 +213,3 @@ cursor = connection.cursor()
 sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
             f"INSERT INTO player (NAME,score,airport_seed) VALUES ('{player_name}',{player_score},LAST_INSERT_ID());")
 cursor.execute(sql_save)
-output_save = cursor.fetchall()
-print(output_save)
