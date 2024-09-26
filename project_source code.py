@@ -8,9 +8,6 @@ connection = mysql.connector.connect(
     collation = 'utf8mb4_general_ci',
     autocommit = True
     ) #connection with database
-def player_name(): #get player name
-    name = input("What is your name? ")
-    return name
 def get_airport_information(): #fetching airport information from database, used in other functions
     airport_dict = {}
     cursor = connection.cursor()
@@ -49,7 +46,7 @@ def airport_list_continent_rename():
             pass
     return list_airport
 def points_calculation(co2_used,money_left_over,difficulty): #points calculation
-    points = round((100000*difficulty/(co2_used + money_left_over*5)/2000),2)
+    points = round((100000*difficulty/((co2_used + money_left_over*5)/2000)),2)
     return points
 def play_action(): #take player action each turn
     print("What would you like to do? ")
@@ -79,11 +76,15 @@ def flight_hint(current_location, airport_dict):
 #main program start here
 player_position = ['EFHK', 'Helsinki Vantaa Airport', 'large_airport', 60.3172, 24.963301, 'FI', 'Finland', 'EU']
 print("You are a cancer patients who coincidentally met 2 other patient at the same hospital for their treatment. ")
-print("Since all of you are in the process of curing your disease, everyone begin to have conversations with each other about their own situation and how they caught cancer. ")
-print("After a brief conversation with each other, everyone realized that all three of them want to make the rest of their lives meaningful by travelling to places they always wanted to. ")
+print("Since all of you are in the process of curing your disease, everyone begin to have conversations with each "
+      "other about their own situation and how they caught cancer. ")
+print("After a brief conversation with each other, everyone realized that all three of them want to make the rest of "
+      "their lives meaningful by travelling to places they always wanted to. ")
 print("However, they are also aware that environmental pollution is the root cause of increasing cancer in people. ")
-print("So, everyone produce an idea that they will try their best to limit their co2 consumption to the lowest while also travelling to as many places as possible within their budget.")
+print("So, everyone produce an idea that they will try their best to limit their co2 consumption to the lowest while "
+      "also travelling to as many places as possible within their budget.")
 print("")
+player_name=input("What name do you want to be saved as?: ")
 print("Everyone have different budget, who do you want to play as?")
 print("Higher difficulty will give you less money to work with, but give more points at the end.")
 while True:
@@ -117,6 +118,10 @@ print("You can use your money to buy more fuel for your travel. ")
 print("Gain hints of which airport is the closest and is the most efficient to travel to.")
 print("Or used to increase your score at the end")
 airport_list = airport_list_continent_rename()
+airport_save = []
+for airport in airport_list:
+    airport_save.append(airport_list[airport][0])
+airport_save = ",".join(airport_save)
 player_action = None
 counter=0
 while len(airport_list) > 0:
@@ -138,8 +143,8 @@ while len(airport_list) > 0:
         player_fuel-=round(distance_travelled*3.5/100, 1)
         player_co2+=round(distance_travelled/10, 1)
         print(f'You travelled {distance_travelled} km')
-        print(f'You used {round(distance_travelled*3.5/100, 1)}L of fuel, and have {player_fuel}L of fuel left.')
-        print(f'While emitting {round(distance_travelled/10, 1)} kg of CO2, you have emitted a total of {player_co2}Kg of CO2.')
+        print(f'You used {round(distance_travelled*3.5/100, 1)}L of fuel, and have {round(player_fuel,1)}L of fuel left.')
+        print(f'While emitting {round(distance_travelled/10, 1)} kg of CO2, you have emitted a total of {round(player_co2,1)}Kg of CO2.')
         print('You are now at',player_position[0],',', player_position[1],',',player_position[6],',',player_position[7])
         print('')
     if player_action == "2":
@@ -202,4 +207,11 @@ while len(airport_list) > 0:
     if counter % 3 == 0:
         player_fuel+= 400
         print("You have gained a free 400L refuel for travelling to 3 new airports")
-print(points_calculation(player_co2,player_money,difficulty_input))
+print(airport_save)
+player_score = points_calculation(player_co2,player_money,difficulty_input)
+cursor = connection.cursor()
+sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
+            f"INSERT INTO player (NAME,score,airport_seed) VALUES ('{player_name}',{player_score},LAST_INSERT_ID());")
+cursor.execute(sql_save)
+output_save = cursor.fetchall()
+print(output_save)
