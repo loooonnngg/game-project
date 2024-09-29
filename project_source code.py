@@ -1,3 +1,5 @@
+from symbol import continue_stmt
+
 import mysql.connector
 from geopy import distance
 connection = mysql.connector.connect(
@@ -25,8 +27,8 @@ def get_airport_distance(location1, location2): #getting distance between two po
     first_airport = location1
     second_airport = location2
     return distance.distance(first_airport, second_airport).kilometers
-def airport_list_continent_rename():
-    list_airport=get_airport_information()
+def airport_list_continent_rename(airport_dict):
+    list_airport=airport_dict
     for i in list_airport:
         if list_airport[i][7] == 'EU':
             list_airport[i][7]='Europe'
@@ -60,9 +62,15 @@ def play_action(): #take player action each turn
         print("Invalid input")
         return play_action()
 def choose_airport(airport_dict):
-    airport_input = int(input("choose the airport you want to go to using the number before each airports: "))
-    new_position = airport_dict[airport_input]
-    del airport_dict[airport_input]
+    while True:
+        airport_input = int(input("choose the airport you want to go to using the number before each airports: "))
+        if airport_input in airport_dict:
+            new_position = airport_dict[airport_input]
+            del airport_dict[airport_input]
+            break
+        else:
+            print("Invalid input")
+            continue
     return new_position
 def flight_hint(current_location, airport_dict):
     compare_list = {}
@@ -73,8 +81,51 @@ def flight_hint(current_location, airport_dict):
         compare_list[i] = distance
     nearest_airport = min(compare_list, key=compare_list.get)
     return nearest_airport, airport_dict[nearest_airport]
+def player_information():
+    cursor = connection.cursor()
+    player_fetch = (f"SELECT player.name,player.score,list_airport.airport_list "
+           f"FROM player, list_airport "
+           f"WHERE player.airport_seed=list_airport.list_seed ")
+    cursor.execute(player_fetch)
+    output = cursor.fetchall()
+    if cursor.rowcount > 0:
+        for i in range(cursor.rowcount):
+            print(i+1,output[i])
+    return output
 #main program start here
 player_position = ['EFHK', 'Helsinki Vantaa Airport', 'large_airport', 60.3172, 24.963301, 'FI', 'Finland', 'EU']
+while True:
+    print("What do you want to do:")
+    print("1: Start a new game")
+    print("2: View previous player")
+    start_game_action = input("")
+    if start_game_action == "1":
+        airport_list = airport_list_continent_rename(get_airport_information())
+        break
+    elif start_game_action == "2":
+        airport_dict = {}
+        player_list = player_information()
+        print("Do you want to start a game from previous player airport list??")
+        print("1: yes")
+        print("2: no ")
+        action_confirm = input("")
+        if action_confirm == "1":
+            list_id = int(input("Which person's list do you want to use, select the number before the person: "))
+            list_ident = player_list[list_id-1][2].split(",")
+            cursor2 = connection.cursor()
+            cursor2.execute(f"SELECT airport.ident, airport.NAME, airport.type, airport.latitude_deg, airport.longitude_deg, airport.iso_country, country.name,airport.continent "
+                   f"FROM country, airport "
+                   f"WHERE airport.iso_country = country.iso_country "
+                   f"having airport.ident = '{list_ident[0]}' OR ident= '{list_ident[1]}' OR ident= '{list_ident[2]}' OR ident= '{list_ident[3]}' OR ident= '{list_ident[4]}' OR ident= '{list_ident[5]}' OR ident= '{list_ident[6]}' OR ident= '{list_ident[7]}' OR ident= '{list_ident[8]}' OR ident= '{list_ident[9]}' OR ident='{list_ident[10]}' OR ident= '{list_ident[11]}'"
+                   f"order by airport.ident;")
+            output2 = cursor2.fetchall()
+            for i in range(12):
+                airport_dict[i+1] = [output2[i][0], output2[i][1], output2[i][2], output2[i][3], output2[i][4], output2[i][5], output2[i][6], output2[i][7]]
+            airport_list=airport_list_continent_rename(airport_dict)
+            break
+        elif action_confirm == "2":
+            continue
+print("")
 print("You are a cancer patients who coincidentally met 2 other patient at the same hospital for their treatment. ")
 print("Since all of you are in the process of curing your disease, everyone begin to have conversations with each "
       "other about their own situation and how they caught cancer. ")
@@ -117,10 +168,10 @@ print(f"Along with hints {player_hint} to know which airport is the closest to t
 print("You can use your money to buy more fuel for your travel. ")
 print("Gain hints of which airport is the closest and is the most efficient to travel to.")
 print("Or used to increase your score at the end")
-airport_list = airport_list_continent_rename()
 airport_save = []
 for airport in airport_list:
     airport_save.append(airport_list[airport][0])
+airport_save.sort()
 airport_save = ",".join(airport_save)
 player_action = None
 counter=0
@@ -207,8 +258,8 @@ while len(airport_list) > 0:
     if counter % 3 == 0:
         player_fuel+= 400
         print("You have gained a free 400L refuel for travelling to 3 new airports")
-print(airport_save)
 player_score = points_calculation(player_co2,player_money,difficulty_input)
+print(f"You have finished your journey and have {player_score} points")
 cursor = connection.cursor()
 sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
             f"INSERT INTO player (NAME,score,airport_seed) VALUES ('{player_name}',{player_score},LAST_INSERT_ID());")
