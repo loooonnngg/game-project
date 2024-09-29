@@ -1,5 +1,3 @@
-from symbol import continue_stmt
-
 import mysql.connector
 from geopy import distance
 connection = mysql.connector.connect(
