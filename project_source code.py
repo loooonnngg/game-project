@@ -25,7 +25,7 @@ def get_airport_distance(location1, location2): #getting distance between two po
     first_airport = location1
     second_airport = location2
     return distance.distance(first_airport, second_airport).kilometers
-def airport_list_continent_rename(airport_dict):
+def airport_list_continent_rename(airport_dict): #rename continent names in airport list for easier reading
     list_airport=airport_dict
     for i in list_airport:
         if list_airport[i][7] == 'EU':
@@ -59,7 +59,7 @@ def play_action(): #take player action each turn
     else:
         print("Invalid input")
         return play_action()
-def choose_airport(airport_dict):
+def choose_airport(airport_dict): #choosing which airport player want to go to
     while True:
         airport_input = int(input("choose the airport you want to go to using the number before each airports: "))
         if airport_input in airport_dict:
@@ -70,7 +70,7 @@ def choose_airport(airport_dict):
             print("Invalid input")
             continue
     return new_position
-def flight_hint(current_location, airport_dict):
+def flight_hint(current_location, airport_dict): #find the nearest airport
     compare_list = {}
     for i in airport_dict:
         start_airport = current_location[3], current_location[4]
@@ -79,7 +79,7 @@ def flight_hint(current_location, airport_dict):
         compare_list[i] = distance
     nearest_airport = min(compare_list, key=compare_list.get)
     return nearest_airport, airport_dict[nearest_airport]
-def player_information():
+def player_information(): #getting previous player information from database
     cursor = connection.cursor()
     player_fetch = (f"SELECT player.name,player.score,list_airport.airport_list "
            f"FROM player, list_airport "
@@ -90,25 +90,27 @@ def player_information():
         for i in range(cursor.rowcount):
             print(i+1,output[i])
     return output
+
+
 #main program start here
-player_position = ['EFHK', 'Helsinki Vantaa Airport', 'large_airport', 60.3172, 24.963301, 'FI', 'Finland', 'EU']
-while True:
+player_position = ['EFHK', 'Helsinki Vantaa Airport', 'large_airport', 60.3172, 24.963301, 'FI', 'Finland', 'EU'] #initializing player_position
+while True: #loop for player action
     print("What do you want to do:")
     print("1: Start a new game")
     print("2: View previous player")
     start_game_action = input("")
     if start_game_action == "1":
-        airport_list = airport_list_continent_rename(get_airport_information())
+        airport_list = airport_list_continent_rename(get_airport_information()) #random airports selection
         break
     elif start_game_action == "2":
         airport_dict = {}
-        player_list = player_information()
+        player_list = player_information() #player information from table
         print("Do you want to start a game from previous player airport list??")
         print("1: yes")
         print("2: no ")
         action_confirm = input("")
-        if action_confirm == "1":
-            list_id = int(input("Which person's list do you want to use, select the number before the person: "))
+        if action_confirm == "1": #getting airports from previous player
+            list_id = int(input("Which person's list do you want to use, select the number before the person: ")) #determine which player to use
             list_ident = player_list[list_id-1][2].split(",")
             cursor2 = connection.cursor()
             cursor2.execute(f"SELECT airport.ident, airport.NAME, airport.type, airport.latitude_deg, airport.longitude_deg, airport.iso_country, country.name,airport.continent "
@@ -121,8 +123,14 @@ while True:
                 airport_dict[i+1] = [output2[i][0], output2[i][1], output2[i][2], output2[i][3], output2[i][4], output2[i][5], output2[i][6], output2[i][7]]
             airport_list=airport_list_continent_rename(airport_dict)
             break
-        elif action_confirm == "2":
+        elif action_confirm == "2": #cancel action and continue loop
             continue
+        else:
+            print("Invalid input") #invalid input from player and continue loop
+            continue
+    else:
+        print("Invalid input") #invalid input from player and continue loop
+        continue
 print("")
 print("You are a cancer patients who coincidentally met 2 other patient at the same hospital for their treatment. ")
 print("Since all of you are in the process of curing your disease, everyone begin to have conversations with each "
@@ -136,12 +144,12 @@ print("")
 player_name=input("What name do you want to be saved as?: ")
 print("Everyone have different budget, who do you want to play as?")
 print("Higher difficulty will give you less money to work with, but give more points at the end.")
-while True:
+while True: #loop for player action
     print("What difficulty would you like to choose? ")
     print("1: Henderson(Easy)")
     print("2: Rosaline(Medium)")
     print("3: Josh(Hard)")
-    difficulty_input=int(input())
+    difficulty_input=int(input()) #difficulty input from player
     if difficulty_input==1:
         money_multiply=3
         break
@@ -156,7 +164,7 @@ while True:
 player_money = 1000*money_multiply
 player_fuel = 1000
 player_co2 = 0
-player_hint = 3
+player_hint = 3 #initializing different variables to use in the game
 print("")
 print("You will be starting from")
 print(player_position[0],',', player_position[1],',',player_position[6],',',player_position[7])
@@ -169,12 +177,12 @@ print("Or used to increase your score at the end")
 airport_save = []
 for airport in airport_list:
     airport_save.append(airport_list[airport][0])
-airport_save.sort()
-airport_save = ",".join(airport_save)
+airport_save.sort() #sorting the airport list
+airport_save = ",".join(airport_save) #saving the airports used to a string to be saved to the database
 player_action = None
 counter=0
-while len(airport_list) > 0:
-    if player_fuel < 0:
+while len(airport_list) > 0: #loop for the game, based on amount of airports left
+    if player_fuel < 0: #checking player fuel
         print("Game over, You ran out of fuel")
         break
     print('List of airport left to visit are:')
@@ -184,57 +192,58 @@ while len(airport_list) > 0:
     print(round(player_fuel,1),"L of fuel")
     print(f"And {player_hint} hints")
     player_action = play_action()
-    if player_action == "1":
+    if player_action == "1": #player travelling
         original_position = [player_position[3],player_position[4]]
         player_position = choose_airport(airport_list)
         new_position = [player_position[3],player_position[4]]
-        distance_travelled = round(get_airport_distance(original_position,new_position),1)
-        player_fuel-=round(distance_travelled*3.5/100, 1)
-        player_co2+=round(distance_travelled/10, 1)
+        distance_travelled = round(get_airport_distance(original_position,new_position),1) #calculating distance
+        player_fuel-=round(distance_travelled*3.5/100, 1) #calculating fuel used
+        player_co2+=round(distance_travelled/10, 1) #calculating co2 emitted
         print(f'You travelled {distance_travelled} km')
         print(f'You used {round(distance_travelled*3.5/100, 1)}L of fuel, and have {round(player_fuel,1)}L of fuel left.')
         print(f'While emitting {round(distance_travelled/10, 1)} kg of CO2, you have emitted a total of {round(player_co2,1)}Kg of CO2.')
         print('You are now at',player_position[0],',', player_position[1],',',player_position[6],',',player_position[7])
         print('')
-    if player_action == "2":
-        while True:
+    if player_action == "2": #player buying
+        while True: #loop for player action
             print("What do you want to do with your money")
             print("1: buy more fuel(300L/500$)")
             print("2: buy more hints(1 hints/200$)")
             print("3: cancel")
             money_action = input(str())
-            if money_action == "1":
-                if player_money >= 500:
+            if money_action == "1": #player buying fuel
+                if player_money >= 500: #checking amount of money left
                     print("You have bought 300L of fuel for 500$")
                     player_fuel+=200
-                    player_money-=500
+                    player_money-=500 #adding and subtracting fuel and money
                     break
                 else:
                     print("You dont have enough money to buy this")
                     continue
-            elif money_action == "2":
+            elif money_action == "2": #buying hints
                 if player_money >= 200:
                     print("You have bought another hint for 200$")
-                    player_hint+=1
+                    player_hint+=1 #adding and subtracting hint and money
                     player_money-=200
                     break
                 else:
                     print("You dont have enough money to buy this")
                     continue
-            elif money_action == "3":
+            elif money_action == "3": #cancel buying action
                 break
             else:
                 print("Invalid input")
-    if player_action == "3":
-        if player_hint > 0:
+                pass
+    if player_action == "3": #using hints
+        if player_hint > 0: #checking amount of hints left
             player_hint-=1
-            nearest_airport = flight_hint(player_position,airport_list)
+            nearest_airport = flight_hint(player_position,airport_list) #calculating nearest airport
             print(f"The nearest airport is {nearest_airport[0]} {nearest_airport[1][0]}, {nearest_airport[1][1]}, {nearest_airport[1][6]}, {nearest_airport[1][7]}")
             print("Do you want to travel to this airport")
             print("1: Yes")
             print("2: No")
             confirm_action = input()
-            if confirm_action == "1":
+            if confirm_action == "1": #confirm travelling, used similar code to player travelling
                 original_position = [player_position[3], player_position[4]]
                 player_position = nearest_airport[1]
                 new_position = [player_position[3], player_position[4]]
@@ -247,18 +256,18 @@ while len(airport_list) > 0:
                 print(f'While emitting {round(distance_travelled / 10, 1)} kg of CO2, you have emitted a total of {round(player_co2,1)}Kg of CO2.')
                 print('You are now at', player_position[0], ',', player_position[1], ',', player_position[6], ',',player_position[7])
                 print('')
-            elif confirm_action == "2":
+            elif confirm_action == "2": #cancel travelling
                 continue
         else:
             print("You don't have any hints left")
             continue
-    counter+=1
-    if counter % 3 == 0:
+    counter+=1 #counter to track how many airport player have passed to give fuel
+    if counter % 3 == 0: #giving player fuel every 3 airports they have travelled
         player_fuel+= 400
         print("You have gained a free 400L refuel for travelling to 3 new airports")
-player_score = points_calculation(player_co2,player_money,difficulty_input)
+player_score = points_calculation(player_co2,player_money,difficulty_input) #calculating score
 print(f"You have finished your journey and have {player_score} points")
 cursor = connection.cursor()
 sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
             f"INSERT INTO player (NAME,score,airport_seed) VALUES ('{player_name}',{player_score},LAST_INSERT_ID());")
-cursor.execute(sql_save)
+cursor.execute(sql_save) #saving player information into database
