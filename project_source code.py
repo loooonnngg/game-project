@@ -91,7 +91,15 @@ def player_information(): #getting previous player information from database
         for i in range(cursor.rowcount):
             print(i+1,output[i])
     return output
-
+def print_player_travel(distance_travelled,player_fuel,player_co2,player_position):
+    print(f'You travelled {distance_travelled} km')
+    print(
+        f'You used {round(distance_travelled * 3.5 / 100, 1)}L of fuel, and have {round(player_fuel, 1)}L of fuel left.')
+    print(
+        f'While emitting {round(distance_travelled / 10, 1)} kg of CO2, you have emitted a total of {round(player_co2, 1)}Kg of CO2.')
+    print('You are now at', player_position[0], ',', player_position[1], ',', player_position[6], ',',
+          player_position[7])
+    print('')
 
 #main program start here
 player_position = ['EFHK', 'Helsinki Vantaa Airport', 'large_airport', 60.3172, 24.963301, 'FI', 'Finland', 'EU'] #initializing player_position
@@ -200,11 +208,7 @@ while len(airport_list) > 0: #loop for the game, based on amount of airports lef
         distance_travelled = round(get_airport_distance(original_position,new_position),1) #calculating distance
         player_fuel-=round(distance_travelled*3.5/100, 1) #calculating fuel used
         player_co2+=round(distance_travelled/10, 1) #calculating co2 emitted
-        print(f'You travelled {distance_travelled} km')
-        print(f'You used {round(distance_travelled*3.5/100, 1)}L of fuel, and have {round(player_fuel,1)}L of fuel left.')
-        print(f'While emitting {round(distance_travelled/10, 1)} kg of CO2, you have emitted a total of {round(player_co2,1)}Kg of CO2.')
-        print('You are now at',player_position[0],',', player_position[1],',',player_position[6],',',player_position[7])
-        print('')
+        print_player_travel(distance_travelled,player_fuel,player_co2,player_position)
     if player_action == "2": #player buying
         while True: #loop for player action
             print("What do you want to do with your money")
@@ -252,11 +256,7 @@ while len(airport_list) > 0: #loop for the game, based on amount of airports lef
                 player_fuel -= round(distance_travelled * 3.5 / 100, 1)
                 player_co2 += round(distance_travelled / 10, 1)
                 del airport_list[nearest_airport[0]]
-                print(f'You travelled {distance_travelled} km')
-                print(f'You used {round(distance_travelled * 3.5 / 100, 1)}L of fuel, and have {round(player_fuel,1)}L of fuel left.')
-                print(f'While emitting {round(distance_travelled / 10, 1)} kg of CO2, you have emitted a total of {round(player_co2,1)}Kg of CO2.')
-                print('You are now at', player_position[0], ',', player_position[1], ',', player_position[6], ',',player_position[7])
-                print('')
+                print_player_travel(distance_travelled,player_fuel,player_co2,player_position)
             elif confirm_action == "2": #cancel travelling
                 continue
         else:
