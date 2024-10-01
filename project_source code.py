@@ -45,16 +45,17 @@ def airport_list_continent_rename(airport_dict): #rename continent names in airp
         else:
             pass
     return list_airport
-def points_calculation(co2_used,money_left_over,difficulty): #points calculation
-    points = round((100000*difficulty/((co2_used + money_left_over*5)/2000)),2)
+def points_calculation(co2_used,money_left_over,difficulty,airport_travelled): #points calculation
+    points = round(((1000000*difficulty*airport_travelled)/((co2_used + money_left_over*5)/2)),2)
     return points
 def play_action(): #take player action each turn
     print("What would you like to do? ")
     print("1: select airport to go to")
     print("2: use your money")
     print("3: use a hint")
+    print("4: stop travelling and calculate your score")
     action_input=input(str())
-    if action_input == "1" or action_input == "2" or action_input == "3":
+    if action_input == "1" or action_input == "2" or action_input == "3" or action_input=="4":
         return action_input
     else:
         print("Invalid input")
@@ -180,7 +181,7 @@ for airport in airport_list:
 airport_save.sort() #sorting the airport list
 airport_save = ",".join(airport_save) #saving the airports used to a string to be saved to the database
 player_action = None
-counter=0
+airport_travelled_to=0
 while len(airport_list) > 0: #loop for the game, based on amount of airports left
     if player_fuel < 0: #checking player fuel
         print("Game over, You ran out of fuel")
@@ -261,11 +262,14 @@ while len(airport_list) > 0: #loop for the game, based on amount of airports lef
         else:
             print("You don't have any hints left")
             continue
-    counter+=1 #counter to track how many airport player have passed to give fuel
-    if counter % 3 == 0: #giving player fuel every 3 airports they have travelled
-        player_fuel+= 400
-        print("You have gained a free 400L refuel for travelling to 3 new airports")
-player_score = points_calculation(player_co2,player_money,difficulty_input) #calculating score
+    if player_action == "4":
+        print(f"You have travelled to {airport_travelled_to} airports, your points will be proportional to the amount of airports you travel to.")
+        break
+    airport_travelled_to+=1 #counter to track how many airport player have passed to give fuel
+    if airport_travelled_to % 3 == 0: #giving player fuel every 3 airports they have travelled
+        player_fuel+= 100
+        print("You have gained a free 100L refuel for travelling to 3 new airports")
+player_score = points_calculation(player_co2,player_money,difficulty_input,airport_travelled_to) #calculating score
 print(f"You have finished your journey and have {player_score} points")
 cursor = connection.cursor()
 sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
