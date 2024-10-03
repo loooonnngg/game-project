@@ -82,14 +82,14 @@ def flight_hint(current_location, airport_dict): #find the nearest airport
     return nearest_airport, airport_dict[nearest_airport]
 def player_information(): #getting previous player information from database
     cursor = connection.cursor()
-    player_fetch = (f"SELECT player.name,player.score,list_airport.airport_list "
+    player_fetch = (f"SELECT player.name,player.score,list_airport.airport_list,list_airport.list_seed "
            f"FROM player, list_airport "
            f"WHERE player.airport_seed=list_airport.list_seed ")
     cursor.execute(player_fetch)
     output = cursor.fetchall()
     if cursor.rowcount > 0:
         for i in range(cursor.rowcount):
-            print(i+1,output[i])
+            print(i+1,",",output[i][0],",",output[i][1],",",output[i][2])
     return output
 def print_player_travel(distance_travelled,player_fuel,player_co2,player_position):
     print(f'You travelled {distance_travelled} km')
@@ -121,6 +121,7 @@ while True: #loop for player action
         if action_confirm == "1": #getting airports from previous player
             list_id = int(input("Which person's list do you want to use, select the number before the person: ")) #determine which player to use
             list_ident = player_list[list_id-1][2].split(",")
+            player_use_seed = player_list[list_id-1][3]
             cursor2 = connection.cursor()
             cursor2.execute(f"SELECT airport.ident, airport.NAME, airport.type, airport.latitude_deg, airport.longitude_deg, airport.iso_country, country.name,airport.continent "
                    f"FROM country, airport "
@@ -271,7 +272,10 @@ while len(airport_list) > 0: #loop for the game, based on amount of airports lef
         print("You have gained a free 100L refuel for travelling to 3 new airports")
 player_score = points_calculation(player_co2,player_money,difficulty_input,airport_travelled_to) #calculating score
 print(f"You have finished your journey and have {player_score} points")
-cursor = connection.cursor()
-sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
+if start_game_action == "2" and action_confirm == "1":
+    sql_save = (f"INSERT INTO player (NAME,score,airport_seed) VALUES ('{player_name}',{player_score},{player_use_seed});")
+else:
+    sql_save = (f"INSERT INTO list_airport (airport_list) VALUES ('{airport_save}');"
             f"INSERT INTO player (NAME,score,airport_seed) VALUES ('{player_name}',{player_score},LAST_INSERT_ID());")
+cursor = connection.cursor()
 cursor.execute(sql_save) #saving player information into database
