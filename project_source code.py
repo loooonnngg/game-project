@@ -1,13 +1,22 @@
 import mysql.connector
 from geopy import distance
-connection = mysql.connector.connect(
-    host = 'localhost',
-    user = 'root',
-    password = 'sql_password',
-    database = 'flight_game',
-    collation = 'utf8mb4_general_ci',
-    autocommit = True
-    ) #connection with database
+while True:
+    user = str(input("enter your sql user "))
+    password = str(input("enter your sql password "))
+    try:
+        connection = mysql.connector.connect(
+            host='localhost',
+            user=user,
+            password=password,
+            database='flight_game',
+            collation='utf8mb4_general_ci',
+            autocommit=True
+        )  # connection with database
+        break #connection with database
+    except mysql.connector.errors.DatabaseError:
+        print("Database error")
+        print("confirm if u have entered the correct username and password")
+        continue
 def get_airport_information(): #fetching airport information from database, used in other functions
     airport_dict = {}
     cursor = connection.cursor()
