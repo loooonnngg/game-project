@@ -279,6 +279,7 @@ while len(airport_list) > 0: #loop for the game, based on amount of airports lef
     if airport_travelled_to % 3 == 0: #giving player fuel every 3 airports they have travelled
         player_fuel+= 100
         print("You have gained a free 100L refuel for travelling to 3 new airports")
+print("Congratulation, you have travelled to all the airports on your list!")
 player_score = points_calculation(player_co2,player_money,difficulty_input,airport_travelled_to) #calculating score
 print(f"You have finished your journey and have {player_score} points")
 if start_game_action == "2" and action_confirm == "1":
